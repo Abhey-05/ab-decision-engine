@@ -43,7 +43,7 @@ engine/ (pure Python, no Streamlit, unit-tested)
    data)         balance)       guardrails, power)                                     novelty, spikes)  decision)
                                          pipeline.py runs all of the above in one call
   uplift.py   T-learner + S-learner (gradient boosting), cross-fitted, Qini curve
-  analyst.py  JSON fact sheet ──► Claude (or template) ──► number verification
+  analyst.py  JSON fact sheet ──► Gemini (or template) ──► number verification
 
 ui.py + app.py + pages/   Streamlit front end (cached), one page per step
 tests/                    pytest: statistics, trust checks, A/A simulation, planted effects, decisions, AI checker, every page
@@ -70,7 +70,7 @@ Guardrail tolerances: average order value may not drop more than 3%, return rate
 4. **Graceful fallback:** with no API key, or if the call fails, a deterministic template writes the readout from the same JSON and is labelled as such. **The app works fully without an API key.**
 5. **The decision never comes from the AI.** It comes from the explicit rules above; the AI only explains it.
 
-Model: `claude-sonnet-5-5`, set in one constant (`MODEL` in `engine/analyst.py`).
+Model: Google Gemini (`gemini-2.5-flash` by default), set in one constant (`MODEL` in `engine/analyst.py`) or overridden with a `GEMINI_MODEL` secret.
 
 ---
 
@@ -88,19 +88,19 @@ pytest -q                 # 24 tests, ~35 s
 streamlit run app.py      # opens http://localhost:8501
 ```
 
-Optional AI readouts: create `.streamlit/secrets.toml` (git-ignored) containing
+Optional AI readouts: copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` (git-ignored) and paste your [Gemini API key](https://aistudio.google.com/apikey):
 
 ```toml
-ANTHROPIC_API_KEY = "sk-ant-..."
+GEMINI_API_KEY = "your-key"
 ```
 
-or `export ANTHROPIC_API_KEY=...`. Without it, the template readout is used.
+or `export GEMINI_API_KEY=...`. Without it, the template readout is used.
 
 ---
 
 ## Tech stack
 
-Python 3.11 · Streamlit · pandas · NumPy · SciPy · statsmodels · scikit-learn · Plotly · Anthropic Claude API (optional) · pytest
+Python 3.11 · Streamlit · pandas · NumPy · SciPy · statsmodels · scikit-learn · Plotly · Google Gemini API (optional) · pytest
 
 ## What the tests prove
 

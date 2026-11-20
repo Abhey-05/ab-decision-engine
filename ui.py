@@ -11,7 +11,7 @@ import os
 
 import streamlit as st
 
-from engine.analyst import build_results_json
+from engine.analyst import MODEL, build_results_json
 from engine.data import EXPERIMENTS, generate_experiment
 from engine.pipeline import analyze
 from engine.uplift import fit_uplift, uplift_facts
@@ -59,13 +59,18 @@ def get_facts(key: str, include_uplift: bool = True) -> dict:
     return build_results_json(EXPERIMENTS[key], get_results(key), up)
 
 
-def get_api_key() -> str | None:
-    """API key from Streamlit secrets or the environment. Never hard-coded."""
+def _setting(name: str) -> str | None:
+    """Read a setting from Streamlit secrets first, then environment variables."""
     try:
-        key = st.secrets.get("ANTHROPIC_API_KEY")
+        value = st.secrets.get(name)
     except Exception:          # no secrets.toml at all
-        key = None
-    return key or os.environ.get("ANTHROPIC_API_KEY")
+        value = None
+    return (value or os.environ.get(name) or "").strip() or None
+
+
+def get_ai_settings() -> tuple[str | None, str]:
+    """(Gemini API key, model name). The key is never hard-coded."""
+    return _setting("GEMINI_API_KEY"), _setting("GEMINI_MODEL") or MODEL
 
 
 # ---------------------------------------------------------------------------

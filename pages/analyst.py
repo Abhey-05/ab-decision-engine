@@ -5,7 +5,7 @@ import json
 import streamlit as st
 
 import ui
-from engine.analyst import MODEL, generate_readout
+from engine.analyst import generate_readout
 
 key = ui.current()
 res = ui.get_results(key)
@@ -28,19 +28,19 @@ No API key or no internet? A template writes the same readout from the same numb
 """,
 )
 
-api_key = ui.get_api_key()
-st.caption(f"AI model: `{MODEL}` · " + ("API key found ✅" if api_key else
-                                         "no API key configured: the template readout will be used"))
+api_key, model = ui.get_ai_settings()
+st.caption(f"AI model: Google Gemini `{model}` · " + ("API key found ✅" if api_key else
+                                                      "no API key configured: the template readout will be used"))
 
 state_key = f"readout_{key}"
 if st.button("✨ Generate readout", type="primary"):
     with st.spinner("Writing the readout..."):
-        st.session_state[state_key] = generate_readout(ui.get_facts(key), api_key)
+        st.session_state[state_key] = generate_readout(ui.get_facts(key), api_key, model)
 
 out = st.session_state.get(state_key)
 if out:
-    if out["source"] == "claude":
-        st.markdown(f"**Written by Claude** (`{MODEL}`) from the fact sheet below.")
+    if out["source"] == "gemini":
+        st.markdown(f"**Written by Google Gemini** (`{out['model']}`) from the fact sheet below.")
     else:
         st.markdown("**Template readout** (deterministic, built from the same numbers; the AI was not used).")
         if out["note"]:

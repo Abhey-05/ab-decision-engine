@@ -16,8 +16,10 @@ from __future__ import annotations
 import json
 import re
 
-MODEL = "claude-sonnet-5-5"   # change the model here, in one place
-MAX_TOKENS = 2000
+# Google Gemini. Change the default model here, in one place, or override it
+# with a GEMINI_MODEL secret / environment variable (see ui.get_ai_settings).
+MODEL = "gemini-2.5-flash"
+MAX_OUTPUT_TOKENS = 8192   # generous: some Gemini models "think" before writing
 
 SYSTEM_PROMPT = """You are a senior product analyst at an online jewellery company. You explain A/B test results to product managers and non-technical stakeholders.
 
@@ -172,7 +174,7 @@ def verify_numbers(text: str, facts: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# 3. Generate the readout (Claude, or template fallback)
+# 3. Generate the readout (Gemini, or template fallback)
 # ---------------------------------------------------------------------------
 
 def template_readout(f: dict) -> str:
@@ -217,34 +219,39 @@ def template_readout(f: dict) -> str:
     return "\n".join(lines)
 
 
-def generate_readout(facts: dict, api_key: str | None) -> dict:
-    """Returns {text, source, note, verification}. source is 'claude' or 'template'."""
+def _call_gemini(facts: dict, api_key: str, model: str) -> str:
+    """Send the fact sheet to Gemini and return its text (may be empty)."""
+    from google import genai
+    from google.genai import types
+
+    client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=60_000))  # ms
+    resp = client.models.generate_content(
+        model=model,
+        contents="Experiment results JSON:\n```json\n" + json.dumps(facts, indent=2) + "\n```\nWrite the readout.",
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            temperature=0.2,              # low = consistent, factual wording
+            max_output_tokens=MAX_OUTPUT_TOKENS,
+        ),
+    )
+    return (resp.text or "").strip()
+
+
+def generate_readout(facts: dict, api_key: str | None, model: str = MODEL) -> dict:
+    """Returns {text, source, model, note, verification}. source is 'gemini' or 'template'."""
     note = None
     if api_key:
         try:
-            import anthropic
-            client = anthropic.Anthropic(api_key=api_key, timeout=60, max_retries=1)
-            resp = client.messages.create(
-                model=MODEL,
-                max_tokens=MAX_TOKENS,
-                system=SYSTEM_PROMPT,
-                output_config={"effort": "low"},   # a short readout; keep it fast
-                messages=[{"role": "user", "content":
-                           "Experiment results JSON:\n```json\n" + json.dumps(facts, indent=2)
-                           + "\n```\nWrite the readout."}],
-            )
-            if resp.stop_reason == "refusal":
-                note = "The AI declined this request."
-            else:
-                text = "".join(b.text for b in resp.content if b.type == "text").strip()
-                if text:
-                    return {"text": text, "source": "claude", "note": None,
-                            "verification": verify_numbers(text, facts)}
-                note = "The AI returned an empty response."
+            text = _call_gemini(facts, api_key, model)
+            if text:
+                return {"text": text, "source": "gemini", "model": model, "note": None,
+                        "verification": verify_numbers(text, facts)}
+            note = "The AI returned an empty response (possibly blocked by a safety filter)."
         except Exception as e:  # any failure -> fall back, never crash the demo
             note = f"AI call failed ({type(e).__name__}); showing the template readout instead."
     else:
         note = "No API key configured; showing the template readout."
 
     text = template_readout(facts)
-    return {"text": text, "source": "template", "note": note, "verification": verify_numbers(text, facts)}
+    return {"text": text, "source": "template", "model": None, "note": note,
+            "verification": verify_numbers(text, facts)}

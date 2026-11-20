@@ -17,7 +17,7 @@ PAGES = ["pages/home.py", "pages/trust.py", "pages/results.py", "pages/segments.
 
 @pytest.mark.parametrize("key", list(EXPERIMENTS))
 def test_every_page_loads(key, monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)   # exercise the fallback path
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)   # exercise the fallback path
     at = AppTest.from_file(APP, default_timeout=120)
     at.session_state["experiment"] = key
     at.run()

@@ -34,7 +34,7 @@ STEPS = [
      "personal benefit. Judged on unseen users with a **Qini curve** vs random targeting."),
     ("8. Anomalies, decision & AI readout", "Rules flag broken splits, guardrail breaches, segments moving against "
      "the average, **novelty effects** (lift fading over the two weeks) and daily spikes. Explicit rules turn "
-     "everything into **Ship / Targeted rollout / Iterate / Don't ship / Fix the test**. Claude then explains the "
+     "everything into **Ship / Targeted rollout / Iterate / Don't ship / Fix the test**. Google Gemini then explains the "
      "result from a JSON fact sheet, and every number it writes is verified."),
 ]
 for title, text in STEPS:
@@ -57,7 +57,7 @@ st.markdown("""
 | Data | pandas, NumPy (seeded synthetic data) |
 | Statistics | SciPy, statsmodels (for verification) |
 | Machine learning | scikit-learn `GradientBoostingClassifier` |
-| AI analyst | Anthropic Claude API, with a template fallback |
+| AI analyst | Google Gemini API (`google-genai`), with a template fallback |
 | Quality | pytest: 19 tests, including A/A simulation and planted-effect recovery |
 | Hosting | Streamlit Community Cloud, deployed from GitHub |
 """)

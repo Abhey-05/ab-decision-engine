@@ -25,7 +25,7 @@ Data flows one way: **generate data → analyse → display**. The AI analyst si
 | `engine/anomalies.py` | Simple rules that flag problems: SRM, guardrail breaches, odd segments, fading effects, daily spikes. |
 | `engine/decision.py` | Turns everything into one of five decisions, with reasons, using explicit if/else rules. |
 | `engine/pipeline.py` | Runs all of the above in order with one call: `analyze(df)`. |
-| `engine/analyst.py` | Builds the JSON fact sheet, calls Claude (or the template), and checks every number. |
+| `engine/analyst.py` | Builds the JSON fact sheet, calls Gemini (or the template), and checks every number. |
 | `ui.py` | Shared website helpers: caching, the sidebar picker, colours, the recommendation card. |
 | `app.py` | The entry point: sets up the page, the sidebar and the list of pages. |
 | `pages/*.py` | One file per page (Home, Trust checks, Results, Segments, Uplift, AI Analyst, Plan, How it works). |
