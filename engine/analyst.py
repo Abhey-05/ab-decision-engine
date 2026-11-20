@@ -71,7 +71,7 @@ def build_results_json(meta: dict, res: dict, uplift: dict | None = None) -> dic
         "significance_threshold_p": 0.05,
         "users": {"control": pr["n_control"], "treatment": pr["n_treatment"]},
         "trust_checks": {
-            "passed": res["trust"]["passed"],
+            "passed": bool(res["trust"]["passed"]),
             "sample_ratio_mismatch_p": _p(res["trust"]["srm"]["p_value"]),
             "srm_threshold_p": 0.001,
             "users_in_both_groups": res["trust"]["duplicates"]["users_in_both_arms"],

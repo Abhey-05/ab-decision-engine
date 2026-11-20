@@ -32,7 +32,7 @@ def srm_check(n_control: int, n_treatment: int, expected_share: float = 0.5) -> 
         "n_control": int(n_control), "n_treatment": int(n_treatment),
         "share_treatment": n_treatment / total,
         "chi2": float(chi2), "p_value": float(p),
-        "passed": p >= SRM_THRESHOLD,
+        "passed": bool(p >= SRM_THRESHOLD),
     }
 
 
@@ -62,7 +62,7 @@ def balance_check(df: pd.DataFrame) -> list[dict]:
                  "treatment": r["treatment"], "p_value": r["p_value"]})
 
     for row in rows:
-        row["passed"] = row["p_value"] >= BALANCE_THRESHOLD
+        row["passed"] = bool(row["p_value"] >= BALANCE_THRESHOLD)
     return rows
 
 

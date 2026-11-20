@@ -111,6 +111,9 @@ def fit_uplift(df: pd.DataFrame, outcome: str = "purchased", seed: int = 0) -> d
         "curve_t": curve_t, "curve_s": curve_s,
         "qini_t": qini_coefficient(curve_t), "qini_s": qini_coefficient(curve_s),
         "n_users": len(df),
+        # Qini counts extra purchases among the TREATED users in the top-k.
+        # Multiply by this to express it per 100,000 visitors.
+        "per_100k": 100_000 / t.sum(),
     }
 
 
@@ -143,16 +146,17 @@ def user_types(scored: pd.DataFrame, threshold: float = 0.002) -> pd.Series:
 
 def uplift_facts(fit: dict) -> dict:
     """Small, rounded summary of the uplift model for the AI analyst's JSON."""
-    curve = fit["curve_t"]
+    curve = fit["curve_t"].copy()
+    curve[["model", "random"]] *= fit["per_100k"]
     s20 = targeting_summary(curve, 0.2)
     types = user_types(fit["scored"]).value_counts(normalize=True)
     return {
         "method": "T-learner (gradient boosting), 2-fold cross-fitted",
-        "qini_coefficient_t_learner": round(fit["qini_t"], 1),
-        "qini_coefficient_s_learner": round(fit["qini_s"], 1),
-        "extra_purchases_if_treat_everyone": round(s20["incremental_everyone"]),
-        "extra_purchases_if_treat_top_20_pct": round(s20["incremental_top"]),
+        "qini_coefficient_t_learner": round(fit["qini_t"] * fit["per_100k"]),
+        "qini_coefficient_s_learner": round(fit["qini_s"] * fit["per_100k"]),
+        "extra_purchases_per_100k_visitors_if_treat_everyone": round(s20["incremental_everyone"]),
+        "extra_purchases_per_100k_visitors_if_treat_top_20_pct": round(s20["incremental_top"]),
         "best_share_to_treat_pct": round(s20["best_fraction"] * 100),
-        "extra_purchases_at_best_share": round(s20["best_incremental"]),
+        "extra_purchases_per_100k_visitors_at_best_share": round(s20["best_incremental"]),
         "user_types_pct": {k: round(v * 100, 1) for k, v in types.items()},
     }
