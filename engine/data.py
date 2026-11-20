@@ -20,7 +20,7 @@ How it works (per user):
 Everything uses a fixed random seed, so the app shows the same numbers every
 time it starts. Seeds were picked so that random noise doesn't hide the
 planted story (with ~700 purchases per arm, a true +15% lift is only
-detected ~70% of the time - see the "Plan a test" page).
+detected ~79% of the time - see the "Plan a test" page).
 """
 
 from __future__ import annotations

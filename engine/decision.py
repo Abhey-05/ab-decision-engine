@@ -51,7 +51,7 @@ def decide(trust: dict, primary: dict, guardrails: list[dict], segments: pd.Data
         reasons.append("Any lift shown is likely caused by the bug, not the feature. Fix the logging and re-run.")
         return {"decision": NO_DECISION, "reasons": reasons}
 
-    lift_txt = (f"Purchase conversion {primary['control']:.2%} -> {primary['treatment']:.2%} "
+    lift_txt = (f"Purchase conversion {primary['control']:.2%} → {primary['treatment']:.2%} "
                 f"({_pct(primary['rel_lift'])}, 95% CI {_pct(primary['rel_ci'][0])} to {_pct(primary['rel_ci'][1])}, "
                 f"{fmt_p(primary['p_value'])})")
     failed = [g for g in guardrails if g["status"] == "FAIL"]
