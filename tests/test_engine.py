@@ -159,3 +159,9 @@ def test_number_checker_allows_rounding(results):
     facts = build_results_json(EXPERIMENTS["price_breakup"], results["price_breakup"])
     lift = facts["primary_metric"]["relative_lift_pct"]
     assert verify_numbers(f"about {round(lift)}%", facts)["all_verified"]
+
+
+def test_facts_are_json_serialisable(results):
+    import json
+    for key, res in results.items():
+        json.dumps(build_results_json(EXPERIMENTS[key], res))
