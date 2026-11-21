@@ -45,7 +45,7 @@ engine/ (pure Python, no Streamlit, unit-tested)
   uplift.py   T-learner + S-learner (gradient boosting), cross-fitted, Qini curve
   analyst.py  JSON fact sheet ──► Gemini (or template) ──► number verification
 
-ui.py + app.py + pages/   Streamlit front end (cached), one page per step
+ui.py + app.py + app_pages/   Streamlit front end (cached), one page per step
 tests/                    pytest: statistics, trust checks, A/A simulation, planted effects, decisions, AI checker, every page
 ```
 
@@ -70,7 +70,7 @@ Guardrail tolerances: average order value may not drop more than 3%, return rate
 4. **Graceful fallback:** with no API key, or if the call fails, a deterministic template writes the readout from the same JSON and is labelled as such. **The app works fully without an API key.**
 5. **The decision never comes from the AI.** It comes from the explicit rules above; the AI only explains it.
 
-Model: Google Gemini (`gemini-2.5-flash` by default), set in one constant (`MODEL` in `engine/analyst.py`) or overridden with a `GEMINI_MODEL` secret.
+Model: Google Gemini (`gemini-3.5-flash-lite` by default, with `gemini-3.1-flash-lite` as a backup), set in one constant (`MODEL` in `engine/analyst.py`) or overridden with a `GEMINI_MODEL` secret.
 
 ---
 
@@ -82,6 +82,8 @@ Requires Python 3.11.
 git clone https://github.com/<your-username>/ab-decision-engine.git
 cd ab-decision-engine
 python3.11 -m venv .venv && source .venv/bin/activate
+# tip: if this folder is synced by iCloud/Dropbox, put the venv outside it,
+# e.g. python3.11 -m venv ~/.venvs/abtest && source ~/.venvs/abtest/bin/activate
 pip install -r requirements-dev.txt
 
 pytest -q                 # 24 tests, ~35 s

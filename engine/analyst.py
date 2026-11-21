@@ -18,7 +18,11 @@ import re
 
 # Google Gemini. Change the default model here, in one place, or override it
 # with a GEMINI_MODEL secret / environment variable (see ui.get_ai_settings).
-MODEL = "gemini-2.5-flash"
+# Google retires older models for new keys, so if the main model fails we
+# try the backup before falling back to the template.
+MODEL = "gemini-3.5-flash-lite"      # fast (~2-4 s) and follows the number rules well
+BACKUP_MODELS = ["gemini-3.1-flash-lite"]
+TIMEOUT_MS = 30_000
 MAX_OUTPUT_TOKENS = 8192   # generous: some Gemini models "think" before writing
 
 SYSTEM_PROMPT = """You are a senior product analyst at an online jewellery company. You explain A/B test results to product managers and non-technical stakeholders.
@@ -127,10 +131,12 @@ def _segments(df) -> list[dict]:
 # compare absolute values so "-3.3%" and "down 3.3%" are treated the same).
 NUMBER_RE = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?")
 LIST_MARKER_RE = re.compile(r"^\s*(?:\d+[.)]|#+)\s", re.MULTILINE)
+THOUSANDS_RE = re.compile(r"(\d+(?:\.\d+)?)\s?k\b")   # "100k" -> 100000
 
 
 def _numbers_in_text(text: str) -> list[str]:
     text = LIST_MARKER_RE.sub(" ", text)          # ignore "1. " list numbering
+    text = THOUSANDS_RE.sub(lambda m: f"{float(m.group(1)) * 1000:.0f}", text)
     return NUMBER_RE.findall(text)
 
 
@@ -224,7 +230,7 @@ def _call_gemini(facts: dict, api_key: str, model: str) -> str:
     from google import genai
     from google.genai import types
 
-    client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=60_000))  # ms
+    client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=TIMEOUT_MS))
     resp = client.models.generate_content(
         model=model,
         contents="Experiment results JSON:\n```json\n" + json.dumps(facts, indent=2) + "\n```\nWrite the readout.",
@@ -241,14 +247,17 @@ def generate_readout(facts: dict, api_key: str | None, model: str = MODEL) -> di
     """Returns {text, source, model, note, verification}. source is 'gemini' or 'template'."""
     note = None
     if api_key:
-        try:
-            text = _call_gemini(facts, api_key, model)
-            if text:
-                return {"text": text, "source": "gemini", "model": model, "note": None,
-                        "verification": verify_numbers(text, facts)}
-            note = "The AI returned an empty response (possibly blocked by a safety filter)."
-        except Exception as e:  # any failure -> fall back, never crash the demo
-            note = f"AI call failed ({type(e).__name__}); showing the template readout instead."
+        failures = []
+        for m in [model] + [b for b in BACKUP_MODELS if b != model]:
+            try:
+                text = _call_gemini(facts, api_key, m)
+                if text:
+                    return {"text": text, "source": "gemini", "model": m, "note": None,
+                            "verification": verify_numbers(text, facts)}
+                failures.append(f"{m}: empty response")
+            except Exception as e:  # any failure -> try the next model, never crash the demo
+                failures.append(f"{m}: {type(e).__name__} {getattr(e, 'code', '') or ''}".strip())
+        note = "AI call failed (" + "; ".join(failures) + "); showing the template readout instead."
     else:
         note = "No API key configured; showing the template readout."
 

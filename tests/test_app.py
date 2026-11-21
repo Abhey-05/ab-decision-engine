@@ -11,8 +11,8 @@ from streamlit.testing.v1 import AppTest
 from engine.data import EXPERIMENTS
 
 APP = str(Path(__file__).resolve().parent.parent / "app.py")
-PAGES = ["pages/home.py", "pages/trust.py", "pages/results.py", "pages/segments.py",
-         "pages/uplift.py", "pages/analyst.py", "pages/plan.py", "pages/how_it_works.py"]
+PAGES = ["app_pages/home.py", "app_pages/trust.py", "app_pages/results.py", "app_pages/segments.py",
+         "app_pages/uplift.py", "app_pages/analyst.py", "app_pages/plan.py", "app_pages/how_it_works.py"]
 
 
 @pytest.mark.parametrize("key", list(EXPERIMENTS))
@@ -26,7 +26,7 @@ def test_every_page_loads(key, monkeypatch):
         at.switch_page(page)
         at.run()
         assert not at.exception, (page, at.exception)
-        if page == "pages/analyst.py":
+        if page == "app_pages/analyst.py":
             at.button[0].click()
             at.run()
             assert not at.exception

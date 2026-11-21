@@ -152,6 +152,8 @@ def uplift_facts(fit: dict) -> dict:
     types = user_types(fit["scored"]).value_counts(normalize=True)
     return {
         "method": "T-learner (gradient boosting), 2-fold cross-fitted",
+        "extra_purchases_are_per_visitors": 100_000,
+        "top_share_pct": 20,
         "qini_coefficient_t_learner": round(fit["qini_t"] * fit["per_100k"]),
         "qini_coefficient_s_learner": round(fit["qini_s"] * fit["per_100k"]),
         "extra_purchases_per_100k_visitors_if_treat_everyone": round(s20["incremental_everyone"]),

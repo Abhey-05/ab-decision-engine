@@ -7,7 +7,7 @@ A beginner-friendly map of the code, so you can answer "how did you build this?"
 The project is split in two:
 
 - **`engine/`**: all the maths and logic, in plain Python. It has **no Streamlit code**, so it can be tested on its own.
-- **`app.py`, `ui.py`, `pages/`**: the website. These files only *display* what the engine computed.
+- **`app.py`, `ui.py`, `app_pages/`**: the website. These files only *display* what the engine computed.
 
 Data flows one way: **generate data → analyse → display**. The AI analyst sits at the very end and only explains.
 
@@ -28,7 +28,7 @@ Data flows one way: **generate data → analyse → display**. The AI analyst si
 | `engine/analyst.py` | Builds the JSON fact sheet, calls Gemini (or the template), and checks every number. |
 | `ui.py` | Shared website helpers: caching, the sidebar picker, colours, the recommendation card. |
 | `app.py` | The entry point: sets up the page, the sidebar and the list of pages. |
-| `pages/*.py` | One file per page (Home, Trust checks, Results, Segments, Uplift, AI Analyst, Plan, How it works). |
+| `app_pages/*.py` | One file per page (Home, Trust checks, Results, Segments, Uplift, AI Analyst, Plan, How it works). Not called `pages/` on purpose: that name makes Streamlit auto-discover pages and bypass `app.py` on a fresh server. |
 | `tests/test_engine.py` | Proves the statistics and decisions are right. |
 | `tests/test_app.py` | Opens every page for every experiment and checks nothing crashes. |
 
@@ -78,4 +78,4 @@ Pulls every number out of the AI's text with a regular expression and checks it 
 - **Change an effect size:** edit `_effects()` in `engine/data.py`, then run `pytest` to see which conclusions change.
 - **Change guardrail tolerances:** `DEFAULT_GUARDRAILS` in `engine/stats.py`.
 - **Change the AI model:** `MODEL` in `engine/analyst.py`.
-- **Add a page:** create `pages/new_page.py` and add one `st.Page(...)` line in `app.py`.
+- **Add a page:** create `app_pages/new_page.py` and add one `st.Page(...)` line in `app.py`.

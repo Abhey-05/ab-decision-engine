@@ -165,3 +165,9 @@ def test_facts_are_json_serialisable(results):
     import json
     for key, res in results.items():
         json.dumps(build_results_json(EXPERIMENTS[key], res))
+
+
+def test_number_checker_understands_k_suffix(results):
+    facts = {"extra_purchases_are_per_visitors": 100_000}
+    assert verify_numbers("about 100k visitors", facts)["all_verified"]
+    assert not verify_numbers("about 200k visitors", facts)["all_verified"]
